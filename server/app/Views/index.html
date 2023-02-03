@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>チャット</title>
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.2/css/all.css">
+  <link rel="stylesheet" href="static/css/style.css" type="text/css">
+  <script type="text/javascript" src="static/js/jquery.min.js"></script>
+</head>
+ 
+<body>
+
+  <!-- Hero -->
+  <section class="hero is-primary">
+    <div class="hero-body">
+      <h1 class="title">
+        へんなチャット
+      </h1>
+      <p class="subtitle">
+        ただのシンプルなチャットです。<br>
+        MVC FW を独自で作ってみたので、そのテスト用。
+      </p>
+    </div>
+  </section>
+
+  <!-- Chat Logs -->
+  <section class="section">
+    <div class="container">
+      {% for d in data %}
+        <article class="media box">
+          <figure class="media-left">
+            <p class="image is-64x64">
+              <img class="is-rounded" src="https://bulma.io/images/placeholders/128x128.png">
+            </p>
+          </figure>
+          <div class="media-content">
+            <div class="content">
+              <p>
+                <strong>{{ d.name }}</strong> <small>{{ d.time }}</small>
+                <br>
+                {{ d.message | raw | nl2br }}
+              </p>
+            </div>
+          </div>
+          <nav class="level is-mobile">
+            <div class="level-left">
+              <a id="btn-delete-{{ d.id }}" class="level-item btn-delete" aria-label="reply">
+                <span class="icon is-small">
+                  <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                  <!-- <i class="fas fa-reply" aria-hidden="true"></i> -->
+                </span>
+              </a>
+              <a class="level-item" aria-label="retweet">
+                <span class="icon is-small">
+                  <i class="fas fa-retweet" aria-hidden="true"></i>
+                </span>
+              </a>
+              <a class="level-item" aria-label="like">
+                <span class="icon is-small">
+                  <i class="fas fa-heart" aria-hidden="true"></i>
+                </span>
+              </a>
+            </div>
+          </nav>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Form -->
+  <div class="section">
+    <div class="container">    
+      <article class="media box">
+        <figure class="media-left">
+          <p class="image is-64x64">
+            <img class="is-rounded" src="https://bulma.io/images/placeholders/128x128.png">
+          </p>
+        </figure>
+        <div class="media-content">
+          <form class="post-form" method="post" action="#">
+            <!-- Name -->
+            <div class="field field-name">
+              <label class="label">名前</label>
+              <div class="control">
+                <input class="input" type="text" name="name" placeholder="Text Input">
+              </div>
+              <p class="help is-danger"></p>
+            </div>
+            <!-- Message -->
+            <div class="field field-message">
+              <label class="label">メッセージ</label>
+              <div class="control">
+                <textarea class="textarea" name="message" placeholder="Textarea"></textarea>
+              </div>
+              <p class="help is-danger"></p>
+            </div>
+            <!-- 削除パスワード -->
+            <div class="field field-passcode">
+              <label class="label">削除用パスワード(数字4桁)</label>
+              <div class="control">
+                <input class="input" type="password" name="passcode" placeholder="Passcode" maxlength="4">
+              </div>
+              <p class="help is-danger"></p>
+            </div> 
+            <!-- Submit Button -->
+            <nav class="level">
+              <div class="level-left">
+                <div class="level-item">
+                  <button class="button is-link submit_btn" type="submit">投稿</button>
+                </div>
+              </div>
+              <div class="level-right">
+                <div class="level-item">
+                  <label class="checkbox">
+                    <input type="checkbox"> チェックして投稿
+                  </label>
+                </div>
+              </div>
+            </nav>
+          </form>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <!-- 投稿エラー -->
+  <div class="modal modal-error">
+    <div class="modal-background" style="background: rgba(10,10,10,.6);"></div>
+    <div class="modal-content">
+      <div class="notification is-warning">
+        投稿に失敗しました。<br>
+        入力をご確認ください。
+      </div>
+    </div>
+    <button class="modal-close is-large" aria-label="close"></button>
+  </div>
+
+  <!-- 投稿エラー -->
+  <div class="modal modal-confirm">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="notification">
+        削除用パスワード(数字4桁)を入力してください。<br>
+        <form class="delete-form" method="post" action="#">
+          <input type="hidden" class="delete-id" name="id" value="">
+          <div class="field field-confirm">
+            <div class="control">
+              <input class="input" type="password" name="passcode" placeholder="Passcode" maxlength="4">
+            </div>
+            <p class="help is-danger"></p>
+          </div>
+          <div class="level-item">
+            <button class="button is-link delete_log_btn" type="submit">削除する</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <button class="modal-close is-large" aria-label="close"></button>
+  </div>
+
+  
+  <script>
+    $(function() {
+      $(".modal-close").click(function(e) {
+        e.stopPropagation();
+        $('.modal').removeClass('is-active');
+      });
+
+
+      $(".btn-delete").click(function(e) {
+        e.stopPropagation();
+        $('.delete-id').val( $(this).attr('id').split('-').pop() )
+        $('.modal-confirm').addClass('is-active');
+      });
+
+      
+      $(".delete_log_btn").click(function(e) {
+        e.preventDefault();
+
+        let data = $(".delete-form").serializeArray();
+
+        $.ajax({
+            url: '/index_delete',
+            type: 'POST',
+            data: data,
+            dataType: 'json',
+            timeout: 1000,  // 単位はミリ秒
+            // 通信成功時の処理
+            success: function(result, textStatus, xhr) {
+                location.reload();
+            },
+            // 通信失敗時の処理
+            error: function(xhr, textStatus, error) {
+                // エラーメッセージ出力
+                let errors = JSON.parse(error);
+                $.each(errors, function(key) {
+                    let message = this[0];
+                    $('.field-confirm').children('.input, .textarea').addClass('is-danger');
+                    $('.field-confirm .is-danger').text(message);
+                });
+            }
+        });
+      });
+
+
+      $(".submit_btn").click(function(e) {
+        e.preventDefault();
+
+        // 前回送信時のエラーメッセージを削除
+        $('.field .help.is-danger').each(function() {
+          $(this).text("");
+        });
+
+        let data = $(".post-form").serializeArray();
+
+        $.ajax({
+            url: '/index',
+            type: 'POST',
+            data: data,
+            dataType: 'json',
+            timeout: 1000,  // 単位はミリ秒
+            // 通信成功時の処理
+            success: function(result, textStatus, xhr) {
+                location.reload();
+            },
+            // 通信失敗時の処理
+            error: function(xhr, textStatus, error) {
+                console.log(textStatus);
+                // エラーメッセージ出力
+                let errors = JSON.parse(error);
+                console.log(errors);
+
+                $.each(errors, function(key) {
+                    let message = this[0];
+                    $('.field-' + key).children('.input, .textarea').addClass('is-danger');
+                    $('.field-' + key + ' .is-danger').text(message);
+                });
+
+                // 投稿エラー
+                $('.modal-error').addClass('is-active');
+            }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

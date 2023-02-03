@@ -1,0 +1,11 @@
+// 変数
+$font-stack:    Helvetica, sans-serif;
+// $color: #444;
+$back-color: #fff;
+
+body {
+  font: 100% $font-stack;
+  // color: $color;
+  background-color: $back-color;
+}
+
